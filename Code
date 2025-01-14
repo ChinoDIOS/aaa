@@ -1,0 +1,771 @@
+import os
+import json
+import tkinter as tk
+from tkinter import messagebox
+from PIL import Image, ImageTk
+
+carpeta = "registros"  # Carpeta donde se guardan los archivos JSON
+
+
+# Configuración global para botones
+BUTTON_CONFIG = {
+    "width": 14,  # ancho de los botones
+    "height": 2,  # alto de los botones
+    "font": ("Helvetica", 14),
+    "padx": 5,
+}
+
+
+class App:
+    def __init__(self, root):
+        # Crear ventana principal
+        self.root = root
+        self.root.title("Cairomark")
+        self.root.geometry("800x600")
+
+        # Ruta de la carpeta de registros
+        self.registros_dir = "registros"
+        if not os.path.exists(self.registros_dir):
+            os.makedirs(self.registros_dir)
+
+        # Variables globales para manejar el estado de la sesión
+        self.is_logged_in = False
+        self.usuario_actual = None  # Guardar el usuario actual
+        self.login_button_instance = (
+            None  # Para poder eliminar el botón de iniciar sesión más tarde
+        )
+        self.perfil_button_instance = None  # Para evitar crear dos botones de perfil
+
+        # Marcos y botones
+        self.frame_menu_lateral = tk.Frame(self.root, bg="pink", width=100, height=600)
+        self.frame_menu_lateral.pack(side="left", fill="y")
+
+        self.frame_superior = tk.Frame(self.root, bg="pink", height=100)
+        self.frame_superior.pack(side="top", fill="x")
+
+        self.frame_botones_superior = tk.Frame(self.frame_superior, bg="pink")
+        self.frame_botones_superior.pack(side="right", padx=10, pady=10)
+
+        # Marco principal
+        self.frame_principal = tk.Frame(self.root, bg="white")
+        self.frame_principal.pack(side="right", expand=True, fill="both")
+
+        # Variable para controlar la apertura de ventanas emergentes
+        self.respuesta_ventana = None
+        self.confirmacion_ventana = None
+
+        # Crear la UI
+        self.init_ui()
+
+    def init_ui(self):
+
+        # Cargar la imagen
+
+        imagen_ruta = Image.open(r"Logo.png")  # Ruta de la imagen
+        imagen_ruta = imagen_ruta.resize((200, 100))  # Ajusta el tamaño (ancho, alto)
+        imagen = ImageTk.PhotoImage(imagen_ruta)
+
+        logo_label = tk.Label(self.frame_menu_lateral, image=imagen, bg="pink")
+        logo_label.image = imagen  # Referencia para evitar que el recolector de basura elimine la imagen
+        logo_label.pack(pady=20)
+
+        label_imagen = tk.Label(root, image=imagen)
+        label_imagen.pack
+
+        # Botones del menú lateral
+        menu_botones = [
+            ("Películas", self.peliculas),
+            ("Confitería", self.confiteria),
+            ("Promociones", self.promociones),
+            ("Servicio al cliente", self.servicio_cliente),
+        ]
+        for texto, comando in menu_botones:
+            tk.Button(
+                self.frame_menu_lateral, text=texto, command=comando, **BUTTON_CONFIG
+            ).pack(pady=10, fill="x")
+
+        # Botones superiores
+        self.login_button_instance = tk.Button(
+            self.frame_botones_superior,
+            text="Iniciar sesión",
+            command=self.iniciar_sesion,
+            width=10,
+            font=("Helvetica", 12),
+        )
+        self.login_button_instance.pack(side="left", padx=5)
+
+        carro_button = tk.Button(
+            self.frame_botones_superior,
+            text="Carro",
+            command=self.carro,
+            width=10,
+            font=("Helvetica", 12),
+        )
+        carro_button.pack(side="left", padx=5)
+
+        # Botón de volver
+        self.back_button = tk.Button(
+            self.frame_botones_superior,
+            text="Volver",
+            command=self.cargar_pantalla_principal,
+            width=10,
+            font=("Helvetica", 12),
+        )
+
+        # Inicializar la pantalla principal
+        self.cargar_pantalla_principal()
+
+    def peliculas(self):
+        print("Películas seleccionadas")
+
+        # Limpiar el contenido de la pantalla principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Crear la sección de preguntas frecuentes
+        self.gui_peliculas()
+
+        # Crear el botón "Tyler The Creator: El destructor de mundos"
+        peli1_button = tk.Button(
+            self.frame_principal,
+            text="Tyler The Creator: El destructor de mundos",
+            font=("Helvetica", 14),
+            command=lambda: self.mostrar_info(
+                "Tyler The Creator: El destructor de mundos",
+                "Producida por: Metro Gordin Meyer",
+            ),
+        )
+        peli1_button.pack(pady=20)  # Empaqueta el botón con un margen vertical
+
+        # Crear el botón "Simonkey: Recargado"
+        peli2_button = tk.Button(
+            self.frame_principal,
+            text="Simonkey: Recargado",
+            font=("Helvetica", 14),
+            command=lambda: self.mostrar_info(
+                "Simonkey: Recargado", "Dirigida por: Master Splinter"
+            ),
+        )
+        peli2_button.pack(pady=20)  # Empaqueta el botón con un margen vertical
+
+        # Crear el botón "Bayron Fire vs Pablo Chill-E"
+        peli3_button = tk.Button(
+            self.frame_principal,
+            text="Bayron Fire vs Pablo Chill-E",  # Nombre en blanco
+            font=("Helvetica", 14),
+            command=lambda: self.mostrar_info(
+                "Bayron Fire vs Pablo Chill-E", "Dirigida por: Geronimo Benavides"
+            ),
+        )
+        peli3_button.pack(pady=20)  # Empaqueta el botón con un margen vertical
+
+        # Crear el botón "Chino: La vuelta del sin forro"
+        peli4_button = tk.Button(
+            self.frame_principal,
+            text="Chino: La vuelta del sin forro",  # Nombre en blanco
+            font=("Helvetica", 14),
+            command=lambda: self.mostrar_info(
+                "Chino: La vuelta del sin forro", "Dirigida por: Chinesse Fumon."
+            ),
+        )
+        peli4_button.pack(pady=20)  # Empaqueta el botón con un margen vertical
+
+    def gui_peliculas(self):  # Método para mostrar preguntas frecuentes
+        gui_peliculas = tk.Frame(self.frame_principal, bg="white")
+        gui_peliculas.pack(
+            pady=20, fill="x"
+        )  # Empaqueta el marco sin expandirse verticalmente
+
+    def mostrar_info(
+        self, titulo, descripcion
+    ):  # Método para mostrar la información de la película seleccionada
+        # Limpiar la pantalla
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Mostrar título y descripción
+        titulo_label = tk.Label(
+            self.frame_principal, text=titulo, font=("Helvetica", 18)
+        )
+        titulo_label.pack(pady=10)
+
+        descripcion_label = tk.Label(
+            self.frame_principal, text=descripcion, font=("Helvetica", 14)
+        )
+        descripcion_label.pack(pady=20)
+
+        # Botón para volver a la lista de películas
+        volver_button = tk.Button(
+            self.frame_principal,
+            text="Volver a las películas",
+            font=("Helvetica", 14),
+            command=self.peliculas,
+        )
+        volver_button.pack(pady=20)
+    def confiteria(self):
+        # Limpiar el contenido de la pantalla principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Configurar el botón de regreso
+        self.back_button.pack(side="left", padx=10)
+        print("Confitería seleccionada")
+
+        # Lista de rutas de imágenes
+        imagenes_rutas = [r"combo1.png", r"combo2.png", r"combo3.png"]
+
+        # Lista para guardar referencias de las imágenes cargadas
+        self.imagenes_cargadas = []
+
+        # Mostrar las imágenes
+        for ruta in imagenes_rutas:
+            imagen_ruta = Image.open(ruta)
+            imagen_ruta = imagen_ruta.resize((200, 250))  # Ajustar el tamaño
+            imagen = ImageTk.PhotoImage(imagen_ruta)
+
+            # Crear y configurar el Label para cada imagen
+            label = tk.Label(self.frame_principal, image=imagen)
+            label.image = imagen  # Guardar la referencia para evitar recolección de basura
+            self.imagenes_cargadas.append(imagen)  # Guardar referencia en la lista
+            label.pack(pady=10)  # Ajustar el espacio entre imágenes
+
+    def salir_de_confiteria(self):
+        # Limpiar los widgets de la pantalla principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Limpiar referencias a imágenes para liberar memoria
+        self.imagenes_cargadas = []
+        print("Saliste de la confitería")
+
+        
+
+
+    def promociones(self):
+                # Limpiar el contenido de la pantalla principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Configurar el botón de regreso
+        self.back_button.pack(side="left", padx=10)
+        print("Confitería seleccionada")
+
+        # Lista de rutas de imágenes
+        imagenes_rutas = [r"combo1.png", r"combo2.png", r"combo3.png"]
+
+        # Lista para guardar referencias de las imágenes cargadas
+        self.imagenes_cargadas = []
+
+        # Mostrar las imágenes
+        for ruta in imagenes_rutas:
+            imagen_ruta = Image.open(ruta)
+            imagen_ruta = imagen_ruta.resize((200, 250))  # Ajustar el tamaño
+            imagen = ImageTk.PhotoImage(imagen_ruta)
+
+            # Crear y configurar el Label para cada imagen
+            label = tk.Label(self.frame_principal, image=imagen)
+            label.image = imagen  # Guardar la referencia para evitar recolección de basura
+            self.imagenes_cargadas.append(imagen)  # Guardar referencia en la lista
+            label.pack(pady=10)  # Ajustar el espacio entre imágenes
+
+    def salir_de_promociones(self):
+        # Limpiar los widgets de la pantalla principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Limpiar referencias a imágenes para liberar memoria
+        self.imagenes_cargadas = []
+        print("Saliste de la confitería")
+
+    def servicio_cliente(self):
+
+        # Limpiar el contenido de la pantalla principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Crear botones para preguntas y formulario de dudas
+        self.crear_frec()
+
+        dudas_button = tk.Button(
+            self.frame_principal,
+            text="Ingresar Duda",
+            font=("Helvetica", 14),
+            command=self.ingresar_duda,
+        )
+        dudas_button.pack(pady=20)
+
+        # Crear boton de volver
+        self.back_button.pack(side="left", padx=10)
+
+    def crear_frec(self):
+        # Crear la sección de preguntas frecuentes
+        frec_frame = tk.Frame(self.frame_principal, bg="white")
+        frec_frame.pack(pady=20, fill="both", expand=True)
+
+        frec_datos = [
+            (
+                "¿Cómo puedo realizar una compra?",
+                "Puedes realizar una reserva aca en línea o visitarnos en nuestra sucursal.",
+            ),
+            (
+                "¿Cuáles son las formas de pago?",
+                "Aceptamos tarjetas de crédito, débito y pagos en efectivo, solo presencial.",
+            ),
+            (
+                "¿Cómo puedo contactar al servicio de atención al cliente?",
+                "Puedes enviarnos un correo electrónico a info@cairomark  o llamarnos al *numero de telefono*.",
+            ),
+            (
+                "¿Tienen promociones disponibles?",
+                "Sí, consulta nuestra sección de promociones en el menú.",
+            ),
+        ]
+
+        # Mostrar preguntas y respuestas en botones
+        for pregunta, respuesta in frec_datos:
+            button = tk.Button(
+                frec_frame,
+                text=pregunta,
+                font=("Helvetica", 14),
+                command=lambda res=respuesta: self.mostrar_respuesta(res),
+            )
+            button.pack(pady=5)
+
+    def mostrar_respuesta(self, respuesta):
+        # Evitar que se abran múltiples ventanas emergentes
+        if self.respuesta_ventana is None or not self.respuesta_ventana.winfo_exists():
+            self.respuesta_ventana = tk.Toplevel(self.root)
+            self.respuesta_ventana.title("Respuesta")
+            tk.Label(
+                self.respuesta_ventana,
+                text=respuesta,
+                font=("Helvetica", 14),
+                padx=20,
+                pady=20,
+            ).pack()
+
+    def ingresar_duda(self):
+        # Limpiar el marco principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Crear formulario para ingresar dudas
+        duda_frame = tk.Frame(self.frame_principal, bg="white", width=500, height=300)
+        duda_frame.pack(expand=True)
+        duda_frame.pack_propagate(False)
+
+        # Título
+        tk.Label(
+            duda_frame, text="Ingresar Duda", font=("Helvetica", 20), bg="white"
+        ).pack(pady=20)
+
+        # Campo de texto para la duda
+        tk.Label(
+            duda_frame, text="Escribe tu duda:", font=("Helvetica", 14), bg="white"
+        ).pack(pady=5)
+        duda_entry = tk.Entry(duda_frame, font=("Helvetica", 14), width=30)
+        duda_entry.pack(pady=5)
+
+        # Botón para enviar la duda
+        enviar_button = tk.Button(
+            duda_frame,
+            text="Enviar Duda",
+            font=("Helvetica", 14),
+            command=lambda: self.enviar_duda(duda_entry.get()),
+        )
+        enviar_button.pack(pady=20)
+
+    def enviar_duda(self, duda):
+        # Verificar si el campo de duda está vacío
+        if duda.strip() == "":
+            # Mostrar mensaje de advertencia si no se ha ingresado ninguna duda
+            messagebox.showwarning(
+                "Advertencia", "Por favor, ingresa una duda antes de enviarla."
+            )
+        else:
+            # Aquí puedes manejar la lógica de envío de la duda
+            print(f"Duda recibida: {duda}")
+            # Evitar que se abra la ventana de confirmación varias veces
+            if (
+                self.confirmation_window is None
+                or not self.confirmation_window.winfo_exists()
+            ):
+                self.confirmation_window = tk.Toplevel(self.root)
+                self.confirmation_window.title("Confirmación")
+                tk.Label(
+                    self.confirmation_window,
+                    text="¡Tu duda ha sido enviada exitosamente!",
+                    font=("Helvetica", 14),
+                    padx=20,
+                    pady=20,
+                ).pack()
+
+    def ver_estreno(self, pelicula):
+        print(f"Viendo estreno: {pelicula}")
+
+    def iniciar_sesion(self):
+        # Limpiar el marco principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Crear un marco interno centrado para los widgets de inicio de sesión
+        login_frame = tk.Frame(self.frame_principal, bg="white", width=500, height=400)
+        login_frame.pack(expand=True)
+        login_frame.pack_propagate(False)  # Mantener las dimensiones del marco
+
+        # Título
+        tk.Label(
+            login_frame, text="Iniciar Sesión", font=("Helvetica", 20), bg="white"
+        ).pack(pady=20)
+
+        # Campos de texto
+        tk.Label(login_frame, text="Usuario:", font=("Helvetica", 14), bg="white").pack(
+            pady=5
+        )
+        username_entry = tk.Entry(login_frame, font=("Helvetica", 14), width=25)
+        username_entry.pack(pady=5)
+
+        tk.Label(
+            login_frame, text="Contraseña:", font=("Helvetica", 14), bg="white"
+        ).pack(pady=5)
+        password_entry = tk.Entry(
+            login_frame, font=("Helvetica", 14), show="*", width=25
+        )
+        password_entry.pack(pady=5)
+
+        # Etiqueta de mensaje de error
+        error_label = tk.Label(
+            login_frame, text="", font=("Helvetica", 12), fg="red", bg="white"
+        )
+        error_label.pack(pady=10)
+
+        # Función para verificar inicio de sesión
+        def verificar_login():
+            usuario = username_entry.get()
+            contraseña = password_entry.get()
+
+            archivo = os.path.join(carpeta, f"{usuario}.json")
+            if os.path.exists(archivo):
+                with open(archivo, "r") as file:
+                    datos = json.load(file)
+                    if datos.get("contraseña") == contraseña:
+                        self.iniciar_sesion_exitoso(usuario)
+                    else:
+                        error_label.config(text="Contraseña incorrecta.")
+            else:
+                error_label.config(text="Usuario no registrado.")
+
+        # Botones
+        login_button = tk.Button(
+            login_frame,
+            text="Ingresar",
+            font=("Helvetica", 14),
+            command=verificar_login,
+        )
+        login_button.pack(pady=5)
+
+        register_button = tk.Button(
+            login_frame,
+            text="Registrarse",
+            font=("Helvetica", 14),
+            command=self.mostrar_registro,
+        )
+        register_button.pack(pady=5)
+
+        recover_button = tk.Button(
+            login_frame,
+            text="Recuperar contraseña",
+            font=("Helvetica", 14),
+            command=lambda: print("Recuperar contraseña"),
+        )
+        recover_button.pack(pady=5)
+
+        # Mostrar el botón de volver
+        self.back_button.pack(side="left", padx=10)
+
+    def iniciar_sesion_exitoso(self, usuario):
+        self.is_logged_in = True
+        self.usuario_actual = usuario  # Guardar el nombre del usuario actual
+
+        # Eliminar el botón de "Iniciar sesión"
+        if self.login_button_instance:
+            self.login_button_instance.destroy()
+
+        # Crear el botón de perfil solo si no existe
+        if self.perfil_button_instance is None:
+            self.perfil_button_instance = tk.Button(
+                self.frame_botones_superior,
+                text="Perfil",
+                font=("Helvetica", 12),
+                command=self.mostrar_perfil,
+            )
+            self.perfil_button_instance.pack(side="left", padx=5)
+
+        # Volver a cargar la pantalla principal
+        self.cargar_pantalla_principal()
+
+    def cargar_pantalla_principal(self):
+        # Limpiar el marco principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        self.back_button.pack_forget()
+
+        # Crear una lista de estrenos de ejemplo
+        estrenos = [
+            "Pancho el gorilla: El regreso - Estreno",
+            "Sofia en el pais de las maravillas - Estreno",
+            "El cazador de pedros - Estreno",
+            "5 noches en el meyer - Estreno",
+        ]
+
+        # Mostrar los estrenos
+        for estreno in estrenos:
+            tk.Button(
+                self.frame_principal,
+                text=estreno,
+                font=("Helvetica", 14),
+                command=lambda e=estreno: self.ver_estreno(e),
+            ).pack(pady=10)
+
+    def mostrar_registro(self):
+        # Limpiar el marco principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Crear un marco interno centrado para los widgets de registro
+        register_frame = tk.Frame(
+            self.frame_principal, bg="white", width=500, height=400
+        )
+        register_frame.pack(expand=True)
+        register_frame.pack_propagate(False)  # Mantener las dimensiones del marco
+
+        # Título
+        tk.Label(
+            register_frame, text="Registro", font=("Helvetica", 20), bg="white"
+        ).pack(pady=20)
+
+        # Campos de texto
+        tk.Label(
+            register_frame,
+            text="Nombre de Usuario:",
+            font=("Helvetica", 14),
+            bg="white",
+        ).pack(pady=5)
+        username_entry = tk.Entry(register_frame, font=("Helvetica", 14), width=25)
+        username_entry.pack(pady=5)
+
+        tk.Label(
+            register_frame,
+            text="Número de Teléfono:",
+            font=("Helvetica", 14),
+            bg="white",
+        ).pack(pady=5)
+        phone_entry = tk.Entry(register_frame, font=("Helvetica", 14), width=25)
+        phone_entry.pack(pady=5)
+
+        tk.Label(
+            register_frame, text="Contraseña:", font=("Helvetica", 14), bg="white"
+        ).pack(pady=5)
+        password_entry = tk.Entry(
+            register_frame, font=("Helvetica", 14), show="*", width=25
+        )
+        password_entry.pack(pady=5)
+
+        # Etiqueta para mostrar mensajes de error
+        error_label = tk.Label(
+            register_frame, text="", font=("Helvetica", 12), fg="red", bg="white"
+        )
+        error_label.pack(pady=5)
+
+        # Función para guardar los datos
+        def registrar_usuario():
+            usuario = username_entry.get().strip()
+            telefono = phone_entry.get().strip()
+            contraseña = password_entry.get().strip()
+
+            # Validaciones
+            if not usuario or not telefono or not contraseña:
+                error_label.config(text="Todos los campos son obligatorios.")
+                return
+
+            if not telefono.isdigit():
+                error_label.config(
+                    text="El número de teléfono debe contener solo dígitos."
+                )
+                return
+
+            if len(contraseña) < 8:
+                error_label.config(
+                    text="La contraseña debe tener al menos 8 caracteres."
+                )
+                return
+
+            # Guardar los datos en un archivo JSON
+            datos_clientes = {
+                "usuario": usuario,
+                "telefono": telefono,
+                "contraseña": contraseña,
+            }
+            carpeta = "registros"
+            os.makedirs(carpeta, exist_ok=True)
+            archivo = os.path.join(carpeta, f"{usuario}.json")
+
+            try:
+                with open(archivo, "w") as file:
+                    json.dump(datos_clientes, file, indent=4)
+
+                error_label.config(text="Registro completado con éxito.", fg="green")
+            except Exception as e:
+                error_label.config(text=f"Error al guardar los datos: {e}", fg="red")
+
+        # Botón para registrar
+        register_button = tk.Button(
+            register_frame,
+            text="Registrar",
+            font=("Helvetica", 14),
+            command=registrar_usuario,
+        )
+        register_button.pack(pady=10)
+
+    def mostrar_perfil(self):
+        # Verificar si el usuario ha iniciado sesión
+        if not self.is_logged_in:
+            print("Debe iniciar sesión primero.")
+            return
+
+        # Limpiar el marco principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+        # Marco interno para el perfil
+        perfil_frame = tk.Frame(self.frame_principal, bg="white", width=500, height=400)
+        perfil_frame.pack(expand=True)
+        perfil_frame.pack_propagate(False)
+
+        # Título
+        tk.Label(
+            perfil_frame, text="Mi Perfil", font=("Helvetica", 20), bg="white"
+        ).pack(pady=20)
+
+        # Ruta del archivo JSON del usuario logueado
+        usuario_archivo = os.path.join(carpeta, f"{self.usuario_actual}.json")
+
+        if not os.path.exists(usuario_archivo):
+            print("No se encontró el archivo del usuario.")
+            return
+
+        # Leer los datos del usuario
+        with open(usuario_archivo, "r") as file:
+            datos = json.load(file)
+
+        # Mostrar y permitir actualizar datos
+        tk.Label(
+            perfil_frame, text="Nombre de Usuario:", font=("Helvetica", 14), bg="white"
+        ).pack(pady=5)
+        username_entry = tk.Entry(perfil_frame, font=("Helvetica", 14), width=25)
+        username_entry.insert(0, datos.get("usuario", ""))
+        username_entry.pack(pady=5)
+
+        tk.Label(
+            perfil_frame, text="Número de Teléfono:", font=("Helvetica", 14), bg="white"
+        ).pack(pady=5)
+        phone_entry = tk.Entry(perfil_frame, font=("Helvetica", 14), width=25)
+        phone_entry.insert(0, datos.get("telefono", ""))
+        phone_entry.pack(pady=5)
+
+        # Función para guardar los cambios
+        def guardar_cambios():
+            nuevo_usuario = username_entry.get()
+            nuevo_telefono = phone_entry.get()
+
+            if not nuevo_usuario or not nuevo_telefono:
+                print("Todos los campos son obligatorios.")
+                return
+
+            nuevo_archivo = os.path.join(carpeta, f"{nuevo_usuario}.json")
+
+            # Actualizar los datos y guardar en un archivo nuevo (si el usuario cambió)
+            datos_actualizados = {
+                "usuario": nuevo_usuario,
+                "telefono": nuevo_telefono,
+                "contraseña": datos["contraseña"],
+            }
+
+            try:
+                # Renombrar el archivo si el nombre de usuario ha cambiado
+                if nuevo_usuario != self.usuario_actual:
+                    if os.path.exists(nuevo_archivo):
+                        print("El nombre de usuario ya está en uso.")
+                        return
+
+                    # Renombrar el archivo actual al nuevo nombre
+                    os.rename(usuario_archivo, nuevo_archivo)
+                    self.usuario_actual = (
+                        nuevo_usuario  # Actualizar el nombre del usuario en la sesión
+                    )
+
+                # Guardar los datos en el archivo actualizado
+                with open(nuevo_archivo, "w") as file:
+                    json.dump(datos_actualizados, file, indent=4)
+
+                print("Datos actualizados correctamente.")
+            except Exception as e:
+                print(f"Error al guardar los datos: {e}")
+                # Botón para guardar cambios
+
+        tk.Button(
+            perfil_frame,
+            text="Guardar Cambios",
+            font=("Helvetica", 14),
+            command=guardar_cambios,
+        ).pack(pady=20)
+        # Mostrar boton volver
+        self.back_button.pack(side="left", padx=10)
+        # Mostrar boton cerrar sesion
+        tk.Button(
+            perfil_frame,
+            text="Cerrar Sesión",
+            font=("Helvetica", 14),
+            command=self.cerrar_sesion,
+        ).pack(pady=10)
+
+    def cerrar_sesion(self):
+        """Cerrar la sesión del usuario actual"""
+        self.is_logged_in = False
+        self.usuario_actual = None  # Eliminar al usuario actual
+
+        # Eliminar el botón de perfil si existe
+        if self.perfil_button_instance:
+            self.perfil_button_instance.destroy()
+            self.perfil_button_instance = None
+
+        # Volver a mostrar el botón de "Iniciar sesión"
+        self.login_button_instance = tk.Button(
+            self.frame_botones_superior,
+            text="Iniciar sesión",
+            command=self.iniciar_sesion,
+            width=10,
+            font=("Helvetica", 12),
+        )
+        self.login_button_instance.pack(side="left", padx=5)
+
+        # Cargar la pantalla principal
+        self.cargar_pantalla_principal()
+
+    def carro(self):
+        print("Carro seleccionado")
+
+        # Limpiar el contenido de la pantalla principal
+        for widget in self.frame_principal.winfo_children():
+            widget.destroy()
+
+
+# Crear ventana principal
+root = tk.Tk()
+
+# Iniciar la aplicación
+app = App(root)
+
+# Iniciar el bucle de la aplicación
+root.mainloop()
